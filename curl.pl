@@ -48,11 +48,11 @@ sub _thread_parser {
 
   $s->down;
   
- LOOP:
+  URL:
   while (1) {
     push @urls, '2000';
     $num_urls ++;
-    last LOOP if $num_urls >= 20;
+    last URL if $num_urls >= 20;
   }
   sleep 3;
 
