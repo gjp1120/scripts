@@ -1,12 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
-#include <uchardet.h>
-#include <iconv.h>
+#include "scope.h"
+#include "text_file.h"
 
-#define BUFFER_SIZE 1024
-#define MAXLN 32
+const char *get_ext(const char *path)
+{
+  char *ext = (char *)malloc(12*sizeof(char));
+  char *dot_addr = strchr(path, '.');
+
+  if(!dot_addr)
+    exit(1);
+
+  strncpy(ext, ++dot_addr, 12);
+
+  return ext;
+}
 
 /**
  * int in_array():
@@ -17,12 +28,11 @@
  *
  * Return: 1 is found
  */
-
 int in_array(const char *str, const char **array)
 {
   while (*array != NULL)
   {
-    if (strcmp(str, *array)) return 1;
+    if (strcmp(str, *array) == 0) return 1;
     array++;
   }
 
@@ -30,82 +40,42 @@ int in_array(const char *str, const char **array)
 }
 
 /**
- * get_charset():
- * get the file content charset by mozilla's universal chardet library
- *
- * fd: the file which content encoding need to be detect
- *
- * Return: an str contains enconding name if we can recoginze that
- */
-const char *get_charset(FILE *fd)
-{
-  const char *charset;
-
-  char *buffer = (char *)malloc(BUFFER_SIZE);
-
-  uchardet_t handle = uchardet_new();  
-  for(int i = 0; i <= MAXLN && !feof(fd); i++)
-  {
-    size_t len = fread(buffer, 1, BUFFER_SIZE, fd);
-    if( uchardet_handle_data(handle, buffer, len) != 0)
-    {
-      fputs("Handle data error\n", stderr);
-      uchardet_delete(handle);
-      exit(-1);
-    }
-  }
-  uchardet_data_end(handle);
-
-  charset = uchardet_get_charset(handle);
-  
-  fclose(fd);
-  free(buffer);
-
-  return charset;
-}
-
-/**
- * print_plain_text_file():
- * 
- * FIXME:
- *  should use iconv
- */
-
-void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
-{
-  char *buffer = (char *)malloc(BUFFER_SIZE);
-  char *out_buffer = charset ? (char *)malloc(BUFFER_SIZE) : NULL;
-  iconv_t converter = charset ? iconv_open("utf8", charset) : NULL;
-  
-  for(int i = 0; i < maxln && fgets(buffer, BUFFER_SIZE, fd) != NULL; i++)
-  {
-    //if (converter) iconv(converter, &buffer, )
-    fputs(buffer, stdout);
-  }
-
-  return;
-}
-
-/**
  * main()
  * the program's entrance point
- *
  */
 int main(int argc, char **argv)
 {
-  if (argc > 2 || argc == 1)
+  if (argc != 4)
   {
-    puts("Usage: ucat <filename>");
-    exit(-1);
+    puts("Usage: scope <filename> <width> <height>");
+    exit(1);
   }
 
-  FILE *fd = NULL;
+  const int maxln = atoi(argv[3]);
+  const char *ext = get_ext(argv[1]);
 
-  if ( !(fd = fopen(argv[1],"r") ))
+  if (in_array(ext, media_file))
   {
-    fputs("Can't open file\n", stderr);
-    exit(-1);
+
+  }
+  else if (in_array(ext, text_file))
+  {
+    FILE *fd = NULL;
+
+    if ( !(fd = fopen(argv[1], "rb") ))
+    {
+      fputs("Can't open file\n", stderr);
+      exit(1);
+    }
+
+    const char *charset = get_charset(fd, maxln);
+    rewind(fd);
+    print_plain_text_file(fd, maxln, charset);
+
+    fclose(fd);
+
+    return 0;
   }
 
-  return 0;
+  return 1;
 }

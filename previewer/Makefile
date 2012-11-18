@@ -1,9 +1,9 @@
-SOURCES = scope.c
+SOURCES = scope.c text_file.c
 OBJECTS = $(SOURCES:.c=.o)
 
-CC += -Wall -std=gnu99
+CC += -Wall -std=gnu99 -g
 
-%.o: %.c
+%.o: %.c %.h
 	$(CC) -c $< -o $@ `pkg-config --cflags uchardet`
 
 all: $(OBJECTS)
@@ -16,5 +16,5 @@ uninstall:
 	@echo "we can't uninstall this"
 
 clean:
-	rm *.o
-	rm scope
+	rm -f *.o
+	rm -f scope
