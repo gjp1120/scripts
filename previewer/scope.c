@@ -6,13 +6,25 @@
 #include "scope.h"
 #include "text_file.h"
 
+/**
+ * const char *get_ext():
+ * get a str which contains file's ext 
+ * WARN:
+ *  this sub will end the process if can't fond any "ext"
+ *  you can't disable this
+ *
+ * path : file's real path str
+ *
+ * Return: a str if seccess
+ */
+
 const char *get_ext(const char *path)
 {
   char *ext = (char *)malloc(12*sizeof(char));
   char *dot_addr = strchr(path, '.');
 
   if(!dot_addr)
-    exit(1);
+    exit(RET_NO_PREVIEW);
 
   strncpy(ext, ++dot_addr, 12);
 
@@ -48,7 +60,7 @@ int main(int argc, char **argv)
   if (argc != 4)
   {
     puts("Usage: scope <filename> <width> <height>");
-    exit(1);
+    exit(RET_NO_PREVIEW);
   }
 
   const int maxln = atoi(argv[3]);
@@ -65,7 +77,7 @@ int main(int argc, char **argv)
     if ( !(fd = fopen(argv[1], "rb") ))
     {
       fputs("Can't open file\n", stderr);
-      exit(1);
+      exit(RET_NO_PREVIEW);
     }
 
     const char *charset = get_charset(fd, maxln);
@@ -74,8 +86,8 @@ int main(int argc, char **argv)
 
     fclose(fd);
 
-    return 0;
+    return RET_SUCCESS;
   }
 
-  return 1;
+  return RET_NO_PREVIEW;
 }

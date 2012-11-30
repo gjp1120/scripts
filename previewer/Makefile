@@ -10,7 +10,7 @@ all: $(OBJECTS)
 	$(CC) $(OBJECTS) -o scope `pkg-config --libs uchardet`
 
 install:
-	@echo "Can't install this project"
+	cp scope ~/.bin
 
 uninstall:
 	@echo "we can't uninstall this"
