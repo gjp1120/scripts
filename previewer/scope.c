@@ -60,7 +60,7 @@ int main(int argc, char **argv)
   if (argc != 4)
   {
     puts("Usage: scope <filename> <width> <height>");
-    exit(RET_NO_PREVIEW);
+    return RET_FAILURE;
   }
 
   const int maxln = atoi(argv[3]);
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     if ( !(fd = fopen(argv[1], "rb") ))
     {
       fputs("Can't open file\n", stderr);
-      exit(RET_NO_PREVIEW);
+      return RET_NO_PREVIEW;
     }
 
     const char *charset = get_charset(fd, maxln);
