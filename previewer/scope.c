@@ -21,7 +21,7 @@
 const char *get_ext(const char *path)
 {
   char *ext = (char *)malloc(12*sizeof(char));
-  char *dot_addr = strchr(path, '.');
+  char *dot_addr = strrchr(path, '.');
 
   if(!dot_addr)
     exit(RET_NO_PREVIEW);
