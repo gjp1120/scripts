@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "scope.h"
 #include "text_file.h"
@@ -44,7 +45,7 @@ int in_array(const char *str, const char **array)
 {
   while (*array != NULL)
   {
-    if (strcmp(str, *array) == 0) return 1;
+    if (strcasecmp(str, *array) == 0) return 1;
     array++;
   }
 
@@ -65,16 +66,17 @@ int main(int argc, char **argv)
 
   const int maxln = atoi(argv[3]);
   const char *ext = get_ext(argv[1]);
+  const char *path = argv[1];
 
   if (in_array(ext, media_file))
   {
-
+    execlp("mediainfo", "mediainfo", path, NULL);
   }
   else if (in_array(ext, text_file))
   {
     FILE *fd = NULL;
 
-    if ( !(fd = fopen(argv[1], "rb") ))
+    if ( !(fd = fopen(path, "rb") ))
     {
       fputs("Can't open file\n", stderr);
       return RET_NO_PREVIEW;

@@ -136,7 +136,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
              * space in the output buffer or we have invalid
              * input.  In any case back the file pointer to
              * the position of the last processed byte.  */
-            perror("...........");
+            perror("an unhandled error");
             //exit(1);
             break;
           }
