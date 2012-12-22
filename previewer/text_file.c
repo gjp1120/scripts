@@ -97,7 +97,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
     }
   }
 
-  size_t avail  = BUFFER_SIZE - 1;
+  size_t avail  = (charset) ? (BUFFER_SIZE - 1) : 0;
   size_t insize = 0;
 
   char *outptr = out_buffer;
@@ -142,25 +142,9 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
           }
       }
   }
-     
-  /*   
-  for(int i = 0; i < maxln && fgets(buffer, BUFFER_SIZE, fd) != NULL; i++)
-  {
-    if (converter)
-    {
-      size_t in_bytes  = BUFFER_SIZE;
-      size_t out_bytes = BUFFER_SIZE;
-      
-      char *in_buf  = buffer;
-      char *out_buf = out_buffer;
-
-      iconv(converter, &in_buf, &in_bytes, &out_buf, &out_bytes);
-      if (errno)
-          puts(strerror(errno));
-    }
-
-    fputs(out_buffer, stdout);
-  }*/
+  
+  if (!charset)
+    read (fileno(fd), buffer + insize, BUFFER_SIZE - insize);
 
   fputs(out_buffer, stdout);
 

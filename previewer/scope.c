@@ -90,6 +90,10 @@ int main(int argc, char **argv)
 
     return RET_SUCCESS;
   }
+  else if (in_array(ext, source_file))
+  {
+    execlp("highlight", "highlight", "--out-format=ansi", path, NULL);
+  }
 
   return RET_NO_PREVIEW;
 }
