@@ -10,17 +10,17 @@ use warnings;
 use IO::Socket;
 use Text::Iconv;
 use IO::Handle;
-use IO::Select;
+use IO::Poll qw/POLLIN/;
 use Carp;
 
 use Getopt::Long;
 
 #use Smart::Comments;
 
-my $ENCODING = 'cp936';
+my $DEFAULT_ENCODING = 'cp936';
 my $PORT = 8000;
 
-GetOptions('encoding|e=s' => \$ENCODING,
+GetOptions('encoding|e=s' => \$DEFAULT_ENCODING,
            'port|p=i' => \$PORT);
 
 # Declare of ATTRS
@@ -40,10 +40,10 @@ my $sock = IO::Socket::INET->new( Listen    => 10,
                                   LocalPort => $PORT )
            or croak "can't create listening soket: $!";
 
-### Create Select Handle
-my $s = IO::Select->new();
-$s->add(\*STDIN);
-$s->add($sock);
+### Create Poll Handle
+my $poll = IO::Poll->new();
+$poll->mask(\*STDIN => POLLIN);
+$poll->mask($sock => POLLIN);
 
 ### Set Handle Opts
 *{STDOUT}->autoflush(1);
@@ -52,14 +52,12 @@ binmode STDOUT;
 ### Setup Log Handle
 open my $log_fd, '>>', "talk.log";
 
-### Push!
-push @USERS, \*STDOUT;
-
+### Start!
 print <<"END_SECION";
 =================================
  Talk Server Started (Telnet)
      port:     $PORT
-     encoding: $ENCODING
+     encoding: $DEFAULT_ENCODING
 =================================
 END_SECION
 
@@ -68,8 +66,9 @@ print_prompt(\*STDOUT);
 
 ### Loop Start
 READY:
-while (my @ready = $s->can_read) {
-  ### @ready
+while ($poll->poll) {
+  my @ready = $poll->handles(POLLIN);
+
   HANDLE:
   foreach my $handle (@ready) {
     if ($handle == $sock) {
@@ -82,12 +81,9 @@ press <Enter> to send message
 END_MSG
 
       print_prompt($session);
-      $s->add($session);
+      $poll->mask($session => POLLIN);
 
-      push @USERS, $session;
-
-      $encode_h{$session} = Text::Iconv->new('utf8', $ENCODING);
-      $decode_h{$session} = Text::Iconv->new($ENCODING, 'utf8');
+      set_client_encoding($session, $DEFAULT_ENCODING);
 
       next HANDLE;
     }
@@ -101,7 +97,7 @@ END_MSG
 
       chomp $line;
 
-      broadcast_msg('server: '.$line."\r\n", \@USERS, \*STDOUT);
+      broadcast_msg('server: '.$line."\r\n", \*STDOUT);
       print_prompt(\*STDOUT);
 
       next HANDLE;
@@ -109,18 +105,16 @@ END_MSG
 
     # Client
     if (not defined $line) {
-      $s->remove($handle);
-
-      for (0 .. $#USERS) {
-        delete $USERS[$_] if $USERS[$_] == $handle;
-      }
+      $poll->remove($handle);
+      
+      broadcast_msg('* client disconnected', $sock);
 
       close $handle;
     }
     else {
       $line = $decode_h{$handle}->convert($line) if defined $decode_h{$handle};
 
-      broadcast_msg('client: '.$line, \@USERS, $handle);
+      broadcast_msg('client: '.$line, $handle);
       print_prompt($handle);
     }
   } 
@@ -135,14 +129,17 @@ close $log_fd;
 # ===========
 
 sub broadcast_msg {
-  my ($raw_msg, $dest_a, $sender) = @_;
+  my ($raw_msg,  $sender) = @_;
 
   if ($raw_msg !~ /\r\n$/) {
     $raw_msg =~ s/\n?$/\r\n/;
   }
 
   DEST:
-  foreach my $dest (@{$dest_a}) {
+  foreach my $dest ($poll->handles()) { ### Broadcasting... END
+    next DEST if $dest == $sock;
+
+    $dest = \*STDOUT if $dest == \*STDIN;
     next DEST if $dest == $sender;
     
     if ($encode_h{$dest}) {
@@ -158,6 +155,7 @@ sub broadcast_msg {
     }
   }
 
+  ### Logging
   log_msg($raw_msg)
 }
 
@@ -185,4 +183,13 @@ sub print_prompt {
 sub log_msg {
   my $msg = shift;
   print $log_fd localtime().' '.$msg;
+}
+
+sub set_client_encoding {
+  my ($session, $encoding) = @_;
+
+  $encoding_of{$session} = $encoding;
+
+  $encode_h{$session} = Text::Iconv->new($encoding, $DEFAULT_ENCODING);
+  $decode_h{$session} = Text::Iconv->new($DEFAULT_ENCODING, $encoding);
 }
