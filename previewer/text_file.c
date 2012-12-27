@@ -64,6 +64,7 @@ const char *get_charset(FILE *fd, const int MAXLN)
 void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
 {
   if (! *charset) charset = NULL;
+  
   printf("\033[1;34mencoding: %s\033[0m\n", (charset) ? charset : "ascii");
 
   char *buffer = (char *)malloc(BUFFER_SIZE);
@@ -102,7 +103,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
 
   char *outptr = out_buffer;
 
-  while ( avail > 0 )
+  while ( avail > 8 )
   {     
     /* Read more input.  */
     size_t nread = read (fileno(fd), buffer + insize, BUFFER_SIZE - insize);
@@ -149,8 +150,13 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
   fputs(out_buffer, stdout);
 
   if (charset)
+  {
     free(out_buffer);
+    free(encoding);
+  }
   free(buffer);
+
+  iconv_close(converter);
 
   return;
 }

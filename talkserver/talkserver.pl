@@ -55,9 +55,9 @@ open my $log_fd, '>>', "talk.log";
 ### Start!
 print <<"END_SECION";
 =================================
- Talk Server Started (Telnet)
-     port:     $PORT
-     encoding: $DEFAULT_ENCODING
+ Talk Server Started (Telnet)\r
+     port:     $PORT\r
+     encoding: $DEFAULT_ENCODING\r
 =================================
 END_SECION
 
@@ -74,10 +74,10 @@ while ($poll->poll) {
     if ($handle == $sock) {
       my $session = $sock->accept or carp "error occured when try to accept connection";
 
-      print $session <<'END_MSG';
-Welcome to telnet talk server
-press <Enter> to send message
-==============================
+      print $session <<"END_MSG";
+Welcome to telnet talk server\r
+press <Enter> to send message\r
+==============================\r
 END_MSG
 
       print_prompt($session);

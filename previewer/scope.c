@@ -17,19 +17,17 @@
  * path : file's real path str
  *
  * Return: a str if seccess
+ *         you should free() it
  */
 
-const char *get_ext(const char *path)
+char *get_ext(const char *path)
 {
-  char *ext = (char *)malloc(12*sizeof(char));
   char *dot_addr = strrchr(path, '.');
 
   if(!dot_addr)
     exit(RET_NO_PREVIEW);
 
-  strncpy(ext, ++dot_addr, 12);
-
-  return ext;
+  return strdup(++dot_addr);
 }
 
 /**
@@ -65,15 +63,17 @@ int main(int argc, char **argv)
   }
 
   const int maxln = atoi(argv[3]);
-  const char *ext = get_ext(argv[1]);
+  char *ext = get_ext(argv[1]);
   const char *path = argv[1];
 
   if (in_array(ext, media_file))
   {
+    free(ext);
     execlp("mediainfo", "mediainfo", path, NULL);
   }
   else if (in_array(ext, text_file))
   {
+    free(ext);
     FILE *fd = NULL;
 
     if ( !(fd = fopen(path, "rb") ))
@@ -92,6 +92,7 @@ int main(int argc, char **argv)
   }
   else if (in_array(ext, source_file))
   {
+    free(ext);
     execlp("highlight", "highlight", "--out-format=ansi", path, NULL);
   }
 

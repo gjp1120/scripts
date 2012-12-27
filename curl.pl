@@ -27,7 +27,7 @@ sub get_content {
   my $curl_handle = WWW::Curl::Easy->new();
   $curl_handle->setopt(CURLOPT_URL, $url);
   $curl_handle->setopt(CURLOPT_HEADER, 1);
-  
+
   my $content;
   open my $fh, '>', \$content or die "can't open file handle";
   $curl_handle->setopt(CURLOPT_WRITEDATA, \$content);
@@ -47,7 +47,7 @@ sub _thread_parser {
   threads->detach();
 
   $s->down;
-  
+
   URL:
   while (1) {
     push @urls, '2000';
@@ -76,7 +76,7 @@ sub _thread_downloader {
     warn 'Errr ... "NULL" string in $url' if not defined $url;
 
     my $handler = WWW::Curl::Easy->new;
-    my ($handler_id) = 
+    my ($handler_id) =
       $url =~ m/([^\/]+)$/;
 
     $handler->setopt(CURLOPT_PRIVATE, $handler_id);
@@ -110,14 +110,13 @@ sub _thread_downloader {
           die 'ERR HANDLER' if not defined $handler;
           ### $handler
           ### $id
-          
+
           if ($return_val == 0) {
             ### $handler
           }
           else {
             print "\033[31mERR:\033[0m" . $handler->strerror($return_val) . "($return_val)\n";
           }
-          
 
           close $fh_of{$id} if defined $fh_of{$id};
           delete $fh_of{$id};

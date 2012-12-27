@@ -1,6 +1,7 @@
 SOURCES = scope.c text_file.c
 OBJECTS = $(SOURCES:.c=.o)
 
+#CC += -Wall -std=gnu99 -g -lefence
 CC += -Wall -std=gnu99 -g
 
 %.o: %.c %.h
