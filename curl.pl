@@ -15,12 +15,15 @@ use WWW::Curl::Multi;
 
 use Smart::Comments;
 
-use Thread::Semaphore;
-
-my $s = Thread::Semaphore->new;
+# 全局数组,保存URL
 my @urls :shared;
-my $num_urls :shared = 0;
 
+# 获取一个URL的内容
+# 使用CURL
+#
+# ARGS:
+#  url: 需要下载的URL
+# 返回内容
 sub get_content {
   my ($url) = @_;
 
@@ -38,7 +41,9 @@ sub get_content {
     return $content;
   }
   else {
-    print "\033[31mERR:\033[0m" . $curl_handle->strerror($retcode) . "($retcode)\n";
+    printf "\033[31mERR:\033[0m%s($retcode)\n",
+      $curl_handle->strerror($retcode);
+
     die 'Unhandled ERR...';
   }
 }
@@ -46,89 +51,121 @@ sub get_content {
 sub _thread_parser {
   threads->detach();
 
-  $s->down;
+  lock @urls;
 
   URL:
   while (1) {
-    push @urls, '2000';
-    $num_urls ++;
-    last URL if $num_urls >= 20;
+    push @urls, 'file:/home/GaoJinpei/Downloads/Packages/cedet-1.1.tar.gz';
+    last URL if @urls >= 20;
   }
-  sleep 3;
-
-  $s->up;
 }
 
-sub _thread_downloader {
+{
   my %handler_of;
   my %fh_of;
   my %data_of;
   my $active_handlers = 0;
 
-  my $curlm = WWW::Curl::Multi->new;
+  # 分配一个未使用的ID
+  # Return: ID
+  sub alloc_id {
+    ALLOC_ID:
+    while (1) {
+      my $id = int(rand(1000));
+      return $id if not exists $handler_of{$id};
+    }
+  }
 
-  HANDLER:
-  while ($num_urls) {
-    $s->down;
-    my $url = pop @urls;
-    $num_urls--;
-    $s->up;
-    warn 'Errr ... "NULL" string in $url' if not defined $url;
+  # 创建并设置一个句柄
+  # ARGS:
+  #  url: 下载链接
+  #  curlm: 管理器实例
+  # 没有有价值的返回值
+  sub create_handler {
+    my ($url, $curlm) = @_;
 
+    # 创建句柄
     my $handler = WWW::Curl::Easy->new;
-    my ($handler_id) =
-      $url =~ m/([^\/]+)$/;
-
+    # 分配唯一的任务ID
+    my $handler_id = alloc_id();
+    # 设置ID
     $handler->setopt(CURLOPT_PRIVATE, $handler_id);
+
+    # 设置句柄
     $handler->setopt(CURLOPT_HEADER, 1);
     $handler->setopt(CURLOPT_URL, $url);
-    # setup OUTPUT
+
+    # 设定输出
     my $res_data;
     open my $output_fd, '>', \$res_data;
     $data_of{$handler_id} = \$res_data;
     $handler->setopt(CURLOPT_WRITEDATA, $output_fd);
     $fh_of{$handler_id} = $output_fd;
 
+    # 保存句柄
     $handler_of{$handler_id} = $handler;
 
+    # 添加句柄
     $curlm->add_handle($handler);
     $active_handlers++;
-
-    last HANDLER if $active_handlers >= 10;
-    last HANDLER if $num_urls == 0;
   }
 
-  ### start dowloading
-  while ($active_handlers) {
-    my $active_transfers = $curlm->perform;
-    if ($active_handlers != $active_transfers) {
-      while (my ($id, $return_val) = $curlm->info_read) {
-        if ($id) {
-          $active_handlers--;
-          my $handler = $handler_of{$id};
+  # 下载器线程函数
+  #
+  # 这个函数没有参数
+  # 没有有价值的返回值
+  sub _thread_downloader {
+    # 分配一个下载管理器
+    my $curlm = WWW::Curl::Multi->new;
 
-          die 'ERR HANDLER' if not defined $handler;
-          ### $handler
-          ### $id
+    # 配置句柄
+    do {
+      lock @urls;
 
-          if ($return_val == 0) {
-            ### $handler
+      HANDLER:
+      while (@urls) {
+        my $url = pop @urls;
+
+        create_handler($url, $curlm);
+
+        last HANDLER if $active_handlers >= 10;
+        last HANDLER if @urls == 0;
+      }
+    };
+
+    # 开始下载循环
+    while ($active_handlers) {
+      my $active_transfers = $curlm->perform;
+      if ($active_handlers != $active_transfers) {
+        while (my ($id, $return_val) = $curlm->info_read) {
+          if ($id) {
+            # 取出句柄
+            $active_handlers--;
+            my $handler = $handler_of{$id};
+            die 'ERR HANDLER' if not defined $handler;
+
+            if ($return_val == 0) {
+              # TODO:
+              # 处理内容
+            }
+            else {
+              printf "\033[31mERROR:\033[0m%s($return_val)\n",
+                $handler->strerror($return_val);
+            }
+
+            close $fh_of{$id} if defined $fh_of{$id};
+            delete $fh_of{$id};
+            delete $handler_of{$id};
           }
-          else {
-            print "\033[31mERR:\033[0m" . $handler->strerror($return_val) . "($return_val)\n";
-          }
-
-          close $fh_of{$id} if defined $fh_of{$id};
-          delete $fh_of{$id};
-          delete $handler_of{$id};
         }
       }
-    }
-    if ($active_transfers == 0) {
-      return;
+      if ($active_transfers == 0) {
+        # 所有的下载已结束
+        return;
+      }
     }
   }
-}
 
+}
 my $parser_thr = threads->create(\&_thread_parser);
 threads->create(\&_thread_downloader)->join();
