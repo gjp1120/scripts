@@ -41,7 +41,7 @@ const char *get_charset(FILE *fd, const int MAXLN)
   }
   uchardet_data_end(handle);
 
-  charset = uchardet_get_charset(handle);
+  charset = strdup(uchardet_get_charset(handle));
 
   uchardet_delete(handle);
   free(buffer);
@@ -66,6 +66,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
   if (! *charset) charset = NULL;
   
   printf("\033[1;34mencoding: %s\033[0m\n", (charset) ? charset : "ascii");
+  fflush(stdout);
 
   char *buffer = (char *)malloc(BUFFER_SIZE);
   if (buffer == NULL)
@@ -81,6 +82,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
     strcpy(encoding, charset);
     strcat(encoding, "//IGNORE");
   }
+  //else encoding = "ascii";
 
   char *out_buffer  = (charset) ? (char *)malloc(BUFFER_SIZE) : buffer;
   iconv_t converter = (charset) ? iconv_open("utf8", encoding) : NULL;
@@ -97,11 +99,12 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
       exit(1);
     }
   }
+  
+  size_t avail    = (charset) ? (BUFFER_SIZE - 1) : 0; //if charset is ascii,we shouldn't read anything.
+  size_t insize   = 0;
+  size_t out_size = 0;
 
-  size_t avail  = (charset) ? (BUFFER_SIZE - 1) : 0;
-  size_t insize = 0;
-
-  char *outptr = out_buffer;
+  char *outptr    = out_buffer;
 
   while ( avail > 8 )
   {     
@@ -145,9 +148,12 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
   }
   
   if (!charset)
-    read (fileno(fd), buffer + insize, BUFFER_SIZE - insize);
+    out_size += read(fileno(fd), buffer, BUFFER_SIZE);
+  else
+    out_size = outptr - out_buffer;
 
-  fputs(out_buffer, stdout);
+  //fputs(out_buffer, stdout);
+  write(1, out_buffer, out_size);
 
   if (charset)
   {
@@ -156,7 +162,7 @@ void print_plain_text_file(FILE *fd, const int maxln, const char *charset)
   }
   free(buffer);
 
-  iconv_close(converter);
+  if (converter) iconv_close(converter);
 
   return;
 }

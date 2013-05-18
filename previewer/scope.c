@@ -95,6 +95,11 @@ int main(int argc, char **argv)
     free(ext);
     execlp("highlight", "highlight", "--out-format=ansi", path, NULL);
   }
+  else if (in_array(ext, webpage))
+  {
+    free(ext);
+    execlp("lynx", "lynx", "-dump", path, NULL);
+  }
 
   return RET_NO_PREVIEW;
 }
