@@ -1,18 +1,7 @@
-#ifndef __SCOPE_FILETYPE_H
-#define __SCOPE_FILETYPE_H
+#ifndef __SCOPE_H
+#define __SCOPE_H
 
-const char *media_file[] = {"flac", "rmvb", "flv", "mkv", "ogg", "mp3", "mp4", "f4v", "avi", NULL};
-const char *text_file[]  = {"txt", "log", "cue", "url", "lrc",NULL};
-const char *webpage[]    = {"htm", "html", NULL};
-const char *source_file[]= {"c", "cxx", "cpp", "c++",  "hpp", "cs", "h",   // C/C++/C# Source
-                            "s", "asm",                                    // Asm Source
-                            "pl", "pm",                                    // Perl
-                            "py", "pyw", "pyx",                            // Python
-                            "am", "m4",                                    // Makefile 
-                            "sh",                                          // Shell
-                            "java", "js",                                  // Java
-                            NULL};                            
-const char *archive[]    = {"Z", "bz2", "xz", "7z", "gz", NULL};
+#include "filetype.h"
 
 // Meanings of exit codes:
 // code | meaning    | action of ranger
@@ -31,4 +20,4 @@ const char *archive[]    = {"Z", "bz2", "xz", "7z", "gz", NULL};
 #define RET_FIX_HEIGHT 4
 #define RET_FIX_BOTH   5
 
-#endif //__SCOPE_FILETYPE_H
+#endif //__SCOPE_H
