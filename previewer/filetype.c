@@ -7,7 +7,7 @@ const char *text_file[]  = {"txt", "log", "cue", "url", "lrc",NULL};
 const char *webpage[]    = {"htm", "html", NULL};
 const char *source_file[]= {"c", "cxx", "cpp", "c++",  "hpp", "cs", "h",   // C/C++/C# Source
                             "s", "asm",                                    // Asm Source
-                            "pl", "pm",                                    // Perl
+                            "pl", "pm", "t",                               // Perl
                             "py", "pyw", "pyx",                            // Python
                             "am", "m4",                                    // Makefile 
                             "sh",                                          // Shell
