@@ -281,7 +281,7 @@ void print_plain_text_file(FILE *fd, const int maxln)
   printf("\033[1;34mencoding: %s\033[0m\n", (*charset) ? charset : "ascii");
   fflush(stdout);
 
-  if (*charset == 0 || strcasecmp(charset, "utf8"))
+  if (*charset == 0 || !strcasecmp(charset, "utf-8"))
   {
     out_size = _read_utf8_file(fd, BUFFER_SIZE, buffer);
   }
