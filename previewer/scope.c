@@ -82,9 +82,7 @@ int main(int argc, char **argv)
       return RET_NO_PREVIEW;
     }
 
-    const char *charset = get_charset(fd, maxln);
-    rewind(fd);
-    print_plain_text_file(fd, maxln, charset);
+    print_plain_text_file(fd, maxln);
 
     fclose(fd);
 

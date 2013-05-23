@@ -1,4 +1,4 @@
-SOURCES = scope.c text_file.c
+SOURCES = scope.c text_file.c filetype.c
 OBJECTS = $(SOURCES:.c=.o)
 
 #CC += -Wall -std=gnu99 -g -lefence
