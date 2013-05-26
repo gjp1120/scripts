@@ -3,7 +3,7 @@
 
 
 const char *media_file[] = {"flac", "rmvb", "flv", "mkv", "ogg", "mp3", "mp4", "f4v", "avi", NULL};
-const char *text_file[]  = {"txt", "log", "cue", "url", "lrc",NULL};
+const char *text_file[]  = {"txt", "log", "cue", "url", "lrc", "md", "rst", NULL};
 const char *webpage[]    = {"htm", "html", NULL};
 const char *source_file[]= {"c", "cxx", "cpp", "c++",  "hpp", "cs", "h",   // C/C++/C# Source
                             "s", "asm",                                    // Asm Source
@@ -11,7 +11,10 @@ const char *source_file[]= {"c", "cxx", "cpp", "c++",  "hpp", "cs", "h",   // C/
                             "py", "pyw", "pyx",                            // Python
                             "am", "m4",                                    // Makefile 
                             "sh",                                          // Shell
-                            "java", "js",                                  // Java
+                            "java", "js",                                  // Java/Java Script
+                            "el",                                          // Lisp
+                            "css",                                         // CSS
+                            "lua",                                         // Lua
                             NULL};                            
 const char *archive[]    = {"Z", "bz2", "xz", "7z", "gz", NULL};
 
