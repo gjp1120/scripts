@@ -96,6 +96,8 @@ int main(int argc, char **argv)
   else if (in_array(ext, webpage))
   {
     free(ext);
+    // Try w3m first
+    execlp("w3m", "w3m", "-dump", path, NULL);
     execlp("lynx", "lynx", "-dump", path, NULL);
   }
 
