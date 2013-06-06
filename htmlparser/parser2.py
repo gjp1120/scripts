@@ -21,7 +21,7 @@ def write_out_result(handle, desc, img, links):
   # Write Out
   # Desc
   handle.write("<p>\n")
-  handle.write(describe)
+  handle.write(desc)
   handle.write("</p>\n")
   # Links
   handle.write("<p>\n")
